@@ -1,0 +1,161 @@
+openapi: "3.0.2"
+info:
+  title: Contract-Payment api
+  version: "1.0"
+servers:
+  - url: http://localhost:3001
+paths:
+  /:
+    get:
+      summary: Ping - healthcheck endpoint
+      description: |
+        Responds with a "200 OK" response to tell it's alive
+      responses:
+        "200":
+          description: OK
+  /contracts:
+    get:
+      summary: Contract list for a user
+      description: |
+        Returns a list of contracts belonging to a user (client or contractor), the list should only contain non terminated contracts.
+      parameters:
+        - name: profile_id
+          description: header with profile id of user
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /contracts/{id}:
+    get:
+      summary: Contract detail
+      parameters:
+        - name: profile_id
+          description: header with profile id of user
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: id
+          description: id of the contract
+          in: path
+          required: true
+          schema:
+            type: string
+      description: |
+        Gets a contract by id. it should return the contract only if it belongs to the profile calling
+      responses:
+        "200":
+          description: OK
+  /jobs/unpaid:
+    get:
+      summary: get unpaid jobs
+      description: Get all unpaid jobs for a user (***either*** a client or contractor), for ***active contracts only***
+      parameters:
+        - name: profile_id
+          description: header with profile id of user
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Ok, retunrs all unpaid jobs for user - active contracts only
+  /jobs/{job_id}/pay:
+    post:
+      summary: pay for a job
+      description: Pay for a job, a client can only pay if his balance >= the amount to pay. The amount should be moved from the client's balance to the contractor balance
+      parameters:
+        - name: profile_id
+          description: header with profile id of user
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: job_id
+          description: id of the job
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Ok. payment is done
+  /balances/deposit/{userId}:
+    post:
+      summary: deposit money
+      description: Deposits money into the the the balance of a client, a client can't deposit more than 25% his total of jobs to pay. (at the deposit moment)
+      parameters:
+        - name: userId
+          description: id of the user
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                amount:
+                  type: number
+      responses:
+        "200":
+          description: Ok. Money deposited in specified client's account
+  /admin/best-profession:
+    get:
+      summary: Get best profession
+      description: Returns the profession that earned the most money (sum of jobs paid) for any contactor that worked in the query time range
+      parameters:
+        - name: start
+          description: start date
+          required: false
+          in: query
+          schema:
+            type: string
+            format: date
+            example: "2020-01-01"
+        - name: end
+          description: end date
+          required: false
+          in: query
+          schema:
+            type: string
+            format: date
+            example: "2020-01-01"
+      responses:
+        "200":
+          description: Ok. Returns best profession
+  /admin/best-clients:
+    get:
+      summary: Get best clients
+      description: returns the clients the paid the most for jobs in the query time period. limit query parameter should be applied, default limit is 2.
+      parameters:
+        - name: start
+          description: start date
+          required: false
+          in: query
+          schema:
+            type: string
+            format: date
+            example: "2020-01-01"
+        - name: end
+          description: end date
+          required: false
+          in: query
+          schema:
+            type: string
+            format: date
+            example: "2020-01-01"
+        - name: limit
+          description: limit. default is 2
+          required: false
+          in: query
+          schema:
+            type: number
+            default: 2
+      responses:
+        "200":
+          description: Ok. Returns best clients
